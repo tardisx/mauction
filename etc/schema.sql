@@ -5,7 +5,8 @@ DROP TABLE users;
 
 CREATE TABLE users (
   id         SERIAL NOT NULL PRIMARY KEY,
-  username   TEXT   NOT NULL UNIQUE
+  username   TEXT   NOT NULL UNIQUE,
+  api_token  TEXT
 );
 
 CREATE TABLE items (
@@ -28,7 +29,7 @@ CREATE TABLE bids (
 );
 
 CREATE TYPE user_bid AS (user_id INT, amount NUMERIC(7,2)); -- a user and amount
-CREATE OR REPLACE FUNCTION current_winner_for_item(this_item_id INT) RETURNS winner AS
+CREATE OR REPLACE FUNCTION current_winner_for_item(this_item_id INT) RETURNS user_bid AS
 $$
   DECLARE
     item items%ROWTYPE;
@@ -40,8 +41,6 @@ $$
 
     winner_proxy    user_bid;
     winner_highest  user_bid;
-    -- current_winner  user_bid;
-    -- previous_winner user_bid;
     this_bid        user_bid;
   BEGIN
     -- fetch all bids
@@ -107,8 +106,9 @@ CREATE VIEW items_winners AS
 CREATE OR REPLACE FUNCTION validate_bid() RETURNS TRIGGER
 AS $$
     DECLARE
-      current_winner winner;
+      current_winner user_bid;
       last_bid   bids%ROWTYPE;
+      this_user_last_bid   bids%ROWTYPE;
       item       items%ROWTYPE;
     BEGIN
       IF (TG_OP = 'DELETE') THEN
@@ -121,6 +121,7 @@ AS $$
         NEW.ts = CURRENT_TIMESTAMP;   -- you don't get to choose your bid time
 
         SELECT * FROM bids  WHERE item_id = NEW.item_id ORDER BY ts DESC LIMIT 1 INTO last_bid;
+        SELECT * FROM bids  WHERE item_id = NEW.item_id and user_id = NEW.user_id ORDER BY TS DESC LIMIT 1 INTO this_user_last_bid;
         SELECT * FROM items WHERE id = NEW.item_id INTO item;
 
         current_winner = current_winner_for_item(NEW.item_id);
@@ -143,6 +144,11 @@ AS $$
 
         IF current_winner.amount IS NOT NULL AND  NEW.amount < current_winner.amount + item.bid_increment THEN
           RAISE EXCEPTION 'bid of % does not exceed winning bid of % by at least %', NEW.amount, current_winner.amount,  item.bid_increment;
+        END IF;
+
+        -- you can't lower a previous bid
+        IF NEW.amount <= this_user_last_bid.amount THEN
+          RAISE EXCEPTION 'you cannot bid lower than your previous bids';
         END IF;
 
       END IF;

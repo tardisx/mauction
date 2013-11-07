@@ -46,6 +46,8 @@ push @bids, { name => "user1: goes for broke at 100 proxy win to 32.50",
               user => $busers->{buser1}, amount => 100, win_user => $busers->{buser1}, win_amount => 32.50 };
 push @bids, { name => "user3: tries to be cheeky",
               user => $busers->{buser3}, amount => 10,  win_user => $busers->{buser1}, win_amount => 32.50, exception => qr/does not exceed/ };
+push @bids, { name => "user1: tries to reduce the potential for pain", # but can't
+              user => $busers->{buser1}, amount => 50, win_user => $busers->{buser1}, win_amount => 32.50, exception => qr/you cannot bid lower than your previous bids/ };
 
 my %bid_options = ( 'item_id' => $item->id );
 
