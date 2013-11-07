@@ -28,7 +28,7 @@ CREATE TABLE bids (
 );
 
 CREATE TYPE user_bid AS (user_id INT, amount NUMERIC(7,2)); -- a user and amount
-CREATE OR REPLACE FUNCTION current_winner_for_item(this_item_id INT) RETURNS winner AS
+CREATE OR REPLACE FUNCTION current_winner_for_item(this_item_id INT) RETURNS user_bid AS
 $$
   DECLARE
     item items%ROWTYPE;
@@ -40,8 +40,6 @@ $$
 
     winner_proxy    user_bid;
     winner_highest  user_bid;
-    -- current_winner  user_bid;
-    -- previous_winner user_bid;
     this_bid        user_bid;
   BEGIN
     -- fetch all bids
@@ -107,7 +105,7 @@ CREATE VIEW items_winners AS
 CREATE OR REPLACE FUNCTION validate_bid() RETURNS TRIGGER
 AS $$
     DECLARE
-      current_winner winner;
+      current_winner user_bid;
       last_bid   bids%ROWTYPE;
       item       items%ROWTYPE;
     BEGIN
