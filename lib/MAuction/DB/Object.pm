@@ -9,7 +9,7 @@ use warnings;
 
 use MAuction::DB;
 
-use Rose::DB::Object::Helpers 'insert_or_update';
+use Rose::DB::Object::Helpers 'insert_or_update', 'as_tree';
 
 use base qw(Rose::DB::Object);
 

@@ -6,7 +6,7 @@ DROP TABLE users;
 CREATE TABLE users (
   id         SERIAL NOT NULL PRIMARY KEY,
   username   TEXT   NOT NULL UNIQUE,
-  api_token  TEXT
+  api_token  TEXT            UNIQUE
 );
 
 CREATE TABLE items (
