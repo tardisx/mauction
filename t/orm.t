@@ -31,7 +31,7 @@ my %bid_options = ( 'item_id' => $item->id, user_id => $buser->id );
 
 throws_ok { MAuction::DB::Bid->new(%bid_options, amount => 1)->save } qr/bid is not at least the minimum bid amount/, 'too small bid ok';
 lives_ok  { MAuction::DB::Bid->new(%bid_options, amount => 10)->save } 'bid at minimum ok';
-throws_ok { MAuction::DB::Bid->new(%bid_options, amount => 12)->save } qr/bid does not exceed previous bid by at least 2.50/, 'second bid not high enough';
+throws_ok { MAuction::DB::Bid->new(%bid_options, amount => 12)->save } qr/bid of 12.00 does not exceed winning bid of 10.00 by at least 2.50/, 'second bid not high enough';
 lives_ok  { MAuction::DB::Bid->new(%bid_options, amount => 12.50)->save } 'second big high enough';
 
 
