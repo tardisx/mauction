@@ -1,0 +1,18 @@
+use Digest::MD5;
+use Time::HiRes qw/time/;
+
+sub generate_new_api_token {
+  my $self = shift;
+
+  my $ctx = Digest::MD5->new;
+
+  $ctx->add(rand());
+  $ctx->add(time());
+  $ctx->add($$);
+  $ctx->add($self->username);
+  $ctx->add($self->id);
+
+  $self->api_token($ctx->hexdigest);
+
+  return $self->api_token;
+}
