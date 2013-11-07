@@ -7,7 +7,7 @@ use Mojo::Base 'Mojolicious::Controller';
 
 sub get_one {
     my $self = shift;
-    my $class = $self->db_class;
+    my $class = $self->db_class_read;
     my $id    = $self->stash('id');
 
     if (! $id) {
@@ -28,11 +28,30 @@ sub get_one {
     return $self->render(status => 200, json => $new->as_tree );
 }
 
-sub get_collection {}
+sub get_collection {
+    my $self = shift;
+    my $limit  = $self->param('limit')  || 50;
+    my $offset = $self->param('offset') || 0;
+    my $sort   = $self->param('sort')   || 'id ASC';
+
+    my $class  = $self->db_class_read . "::Manager";
+    eval "require $class";
+    die $@ if $@;
+
+    my $method = $self->get_read_method;
+    my $collection = $class->$method(
+        query => [ ],
+        limit => $limit,
+        offset => $offset,
+        sort_by => $sort
+    );
+
+    return $self->render(status => 200, json => [ map { $_->as_tree } @$collection ] );
+}
 
 sub delete {
     my $self = shift;
-    my $class = $self->db_class;
+    my $class = $self->db_class_write;
     my $id    = $self->stash('id');
 
     if (! $id) {
@@ -60,7 +79,7 @@ sub delete {
 
 sub post {
     my $self = shift;
-    my $class = $self->db_class;
+    my $class = $self->db_class_write;
     my $req   = $self->req->json;
 
     eval "require $class";

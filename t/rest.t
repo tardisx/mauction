@@ -73,7 +73,8 @@ my $id = $t->tx->res->json->{id};
 $t->get_ok('/rest/v1/items/'.$id)
   ->status_is(200)
   ->json_is('/id', $id)
-  ->json_is('/name', 'mahogany cabinet');
+  ->json_is('/name', 'mahogany cabinet')
+  ->json_has('/current_winner_for_item');
 
 $t->get_ok('/rest/v1/items/1234567890')
   ->status_is(404)
@@ -91,6 +92,28 @@ $t->delete_ok('/rest/v1/items/'.$id)
   ->json_hasnt('/id')
   ->json_is('/error', 'no such object id: '.$id);
 
+# collection
+# create some items to be in the collection
+my $ids = {};
+foreach (1..10) {
+  $t->post_ok('/rest/v1/items', json => { name => 'collection item', description => 'xx', bid_increment => 5.50, bid_min => 100, start_ts => '2013-01-11', end_ts => '2014-02-03' })
+    ->status_is(200)
+    ->json_hasnt('/error')
+    ->json_has('/id');
+  $ids->{$t->tx->res->json->{id}}++;
+}
+is(keys %$ids, 10, '10 items created');
 
+$t->get_ok('/rest/v1/items?sort=id%20DESC')
+  ->status_is(200);
+
+# Check we receive them back in the order we created them.
+# This is a little fragile - if something else modified the database
+# at the same time (like doing simultaneous tests) this might fail.
+my $idx = 0;
+foreach (reverse sort keys %$ids) {
+  $t->json_is("/$idx/id", $_);
+  $idx++;
+}
 
 done_testing();

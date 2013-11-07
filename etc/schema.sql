@@ -2,6 +2,8 @@ DROP VIEW items_winners;
 DROP TABLE bids;
 DROP TABLE items;
 DROP TABLE users;
+DROP FUNCTION current_winner_for_item(this_item_id INT);
+DROP TYPE user_bid;
 
 CREATE TABLE users (
   id         SERIAL NOT NULL PRIMARY KEY,
@@ -11,18 +13,18 @@ CREATE TABLE users (
 
 CREATE TABLE items (
   id              SERIAL        NOT NULL PRIMARY KEY,
-  user_id        INT           NOT NULL REFERENCES users(id),
+  user_id         INT           NOT NULL REFERENCES users(id),
   name            TEXT          NOT NULL,
   description     TEXT          NOT NULL,
   bid_increment   NUMERIC(5,2 ) NOT NULL,
-  bid_min  NUMERIC(7,2)  NOT NULL,
+  bid_min  NUMERIC(7,2)         NOT NULL,
   start_ts        TIMESTAMP     NOT NULL,
   end_ts          TIMESTAMP     NOT NULL
 );
 
 CREATE TABLE bids (
   id        SERIAL          NOT NULL PRIMARY KEY,
-  user_id  INT             NOT NULL REFERENCES users(id),
+  user_id  INT              NOT NULL REFERENCES users(id),
   item_id   INT             NOT NULL REFERENCES items(id),
   ts        TIMESTAMP       NOT NULL,
   amount    NUMERIC(7,2)    NOT NULL
@@ -32,13 +34,11 @@ CREATE TYPE user_bid AS (user_id INT, amount NUMERIC(7,2)); -- a user and amount
 CREATE OR REPLACE FUNCTION current_winner_for_item(this_item_id INT) RETURNS user_bid AS
 $$
   DECLARE
-    item items%ROWTYPE;
-    bid  bids%ROWTYPE;
+    item        items%ROWTYPE;
+    bid         bids%ROWTYPE;
     bid_count   INT;
 
     -- these for when we iterate
-    last_bid        bids%ROWTYPE;
-
     winner_proxy    user_bid;
     winner_highest  user_bid;
     this_bid        user_bid;
