@@ -5,9 +5,58 @@ use warnings;
 
 use Mojo::Base 'Mojolicious::Controller';
 
-sub get_one {}
+sub get_one {
+    my $self = shift;
+    my $class = $self->db_class;
+    my $id    = $self->stash('id');
+
+    if (! $id) {
+        return $self->render(status => 404, json => { error => 'no id provided' } );
+    }
+    if ($id !~ /^\d+$/) {
+        return $self->render(status => 400, json => { error => "bad id $id provided" } );
+    }
+
+    eval "require $class";
+    die $@ if $@;
+
+    my $new = $class->new(id => $id)->load(speculative => 1);
+    if (! $new) {
+        return $self->render(status => 404, json => { error => 'no such object id: '.$id });
+    }
+
+    return $self->render(status => 200, json => $new->as_tree );
+}
 
 sub get_collection {}
+
+sub delete {
+    my $self = shift;
+    my $class = $self->db_class;
+    my $id    = $self->stash('id');
+
+    if (! $id) {
+        return $self->render(status => 404, json => { error => 'no id provided' } );
+    }
+    if ($id !~ /^\d+$/) {
+        return $self->render(status => 400, json => { error => "bad id $id provided" } );
+    }
+
+    eval "require $class";
+    die $@ if $@;
+
+    my $object = $class->new(id => $id)->load(speculative => 1);
+
+    if (! $object) {
+        return $self->render(status => 404, json => { error => 'no such object id: '.$id });
+    }
+    eval { $object->delete };
+
+    if ($@) {
+        return $self->render(status => 400, json => { error => $@ });
+    }
+    return $self->render(status => 200, json => {});
+}
 
 sub post {
     my $self = shift;

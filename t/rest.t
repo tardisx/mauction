@@ -67,4 +67,30 @@ $t->post_ok('/rest/v1/items', json => { name => 'mahogany cabinet', description 
   ->json_hasnt('/error')
   ->json_has('/id');
 
+my $id = $t->tx->res->json->{id};
+
+# get
+$t->get_ok('/rest/v1/items/'.$id)
+  ->status_is(200)
+  ->json_is('/id', $id)
+  ->json_is('/name', 'mahogany cabinet');
+
+$t->get_ok('/rest/v1/items/1234567890')
+  ->status_is(404)
+  ->json_hasnt('/id')
+  ->json_is('/error', 'no such object id: 1234567890');
+
+# lets delete it
+$t->delete_ok('/rest/v1/items/'.$id)
+  ->status_is(200)
+  ->json_hasnt('/id');
+
+# but not twice
+$t->delete_ok('/rest/v1/items/'.$id)
+  ->status_is(404)
+  ->json_hasnt('/id')
+  ->json_is('/error', 'no such object id: '.$id);
+
+
+
 done_testing();
