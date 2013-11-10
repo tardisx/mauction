@@ -116,4 +116,12 @@ foreach (reverse sort keys %$ids) {
   $idx++;
 }
 
+# Do any collection fetch, limited to only 5 items, make sure we get back 5
+$t->get_ok('/rest/v1/items?limit=5')
+  ->status_is(200);
+
+is(scalar @{ $t->tx->res->json}, 5, '5 items');
+
+
+
 done_testing();

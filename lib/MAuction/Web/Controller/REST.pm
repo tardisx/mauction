@@ -40,9 +40,9 @@ sub get_collection {
 
     my $method = $self->get_read_method;
     my $collection = $class->$method(
-        query => [ ],
-        limit => $limit,
-        offset => $offset,
+        query   => [ ],
+        limit   => $limit,
+        offset  => $offset,
         sort_by => $sort
     );
 
