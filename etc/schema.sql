@@ -10,6 +10,7 @@ CREATE TABLE users (
   username   TEXT   NOT NULL UNIQUE,
   api_token  TEXT            UNIQUE
 );
+CREATE UNIQUE INDEX lower_username ON users (lower(username));
 
 CREATE TABLE items (
   id              SERIAL        NOT NULL PRIMARY KEY,
