@@ -94,13 +94,37 @@ sub post {
     }
 
     if ($new->can('user_id')) {
-        $new->user_id($self->stash->{user}->id);
+ !       $new->user_id($self->stash->{user}->id);
     }
 
     $self->_eval_save($new);
 }
 
-sub put {}
+sub put {
+    my $self = shift;
+    my $class = $self->db_class_write;
+    my $req   = $self->req->json;
+    my $id    = $self->param('id');
+
+    $self->_log('PUT', "id: $id");
+
+    eval "require $class";
+    die $@ if $@;
+
+    my $new = $class->new(id => $id)->load(speculative => 1);
+    if (! $new) {
+        return $self->render(status => 404, json => { error => 'no such object' });
+    }
+
+    foreach my $param ($self->post_fields) {
+        if ($req->{$param} && ! ref($req->{$param})) {
+            eval { $new->$param($req->{$param}) };
+            return $self->_render_set_exception($param, $@) if $@;
+        }
+    }
+
+    $self->_eval_save($new);
+}
 
 sub _render_set_exception {
     my $self = shift;
@@ -133,6 +157,16 @@ sub _eval_save {
     }
 
     $self->render(status => 400, json => { error => $error_msg });
+}
+
+sub _log {
+    my $self   = shift;
+    my $class  = $self->db_class_read;
+    my $method = shift;
+    my $msg    = shift;
+
+    $self->app->log->info("REST: $class $method: $msg");
+    return;
 }
 
 1;

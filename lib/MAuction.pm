@@ -19,7 +19,7 @@ sub startup {
   $rest->get('/items/:id')->to(controller => 'REST::Items', action => 'get_one');
   $rest->get('/items')->to(controller => 'REST::Items', action => 'get_collection');
   $rest->delete('/items/:id')->to(controller => 'REST::Items', action => 'delete');
-#  $rest->put('/items/:id')->to(controller => 'REST::Items', action => 'put');
+  $rest->put('/items/:id')->to(controller => 'REST::Items', action => 'put');
 
   # Normal route to controller
   # $r->get('/')->to('example#welcome');

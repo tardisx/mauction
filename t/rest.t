@@ -122,6 +122,22 @@ $t->get_ok('/rest/v1/items?limit=5')
 
 is(scalar @{ $t->tx->res->json}, 5, '5 items');
 
+# Test modification of items
+$t->post_ok('/rest/v1/items', json => { name => 'this should be a frog', description => 'ribbet', bid_increment => 5.50, bid_min => 100, start_ts => '2013-01-11', end_ts => '2014-02-03' })
+  ->status_is(200)
+  ->json_hasnt('/error')
+  ->json_has('/id');
 
+my $put_id = $t->tx->res->json->{id};
+
+$t->put_ok("/rest/v1/items/$put_id", json => { name => "freddo frog" })
+  ->status_is(200)
+  ->json_is('/id', $put_id)
+  ->json_is('/name', 'freddo frog');
+
+# fetch again to be sure
+$t->get_ok("/rest/v1/items/$put_id")
+  ->status_is(200)
+  ->json_is('/name', 'freddo frog');
 
 done_testing();
