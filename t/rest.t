@@ -14,7 +14,7 @@ my $t = Test::Mojo->new('MAuction');
 # try a rest request with no token
 $t->get_ok('/rest/v1/items')
   ->status_is(400)
-  ->json_is('/error', 'invalid api token');
+  ->json_is('/error', 'no token or session supplied');
 
 my $user = MAuction::DB::User->new(username => "test_$$")->save();
 ok ($user, 'user exists');

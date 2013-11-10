@@ -15,7 +15,8 @@ sub check_user {
     }
 
     $self->app->log->error("no token and no user session");
-    $self->render( status => 400, json => { error => "no authentication credentials or session supplied" } );
+    $self->render( status => 400, json => { error => "no token or session supplied" } );
+    return 0;
 }
 
 sub check_token {
