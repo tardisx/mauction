@@ -1,9 +1,20 @@
 package MAuction;
 use Mojo::Base 'Mojolicious';
+use Authen::Simple;
 
 # This method will run once at server start
 sub startup {
   my $self = shift;
+
+  $self->plugin('Config', file => 'etc/mauction.conf');
+
+  my $auth_class      = $self->config->{auth}->{module};
+  my $auth_class_args = $self->config->{auth}->{args};
+
+  eval "require $auth_class" || die $@;
+
+  my $authenticator = $auth_class->new(%$auth_class_args, log => $self->app->log);
+  $self->defaults(authen => $authenticator);
 
   push @{$self->app->routes->namespaces}, 'MAuction::Web::Controller';
 
@@ -24,6 +35,10 @@ sub startup {
   # bids
   $rest->post('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'post');
   $rest->get('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'get_collection');
+
+  # web ui
+  my $ui = $r->bridge->to(controller => 'User', action => 'check_user')->bridge('/');
+  $ui->get('/')->to(controller => 'Home', action => 'index');
 }
 
 1;

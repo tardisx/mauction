@@ -1,0 +1,2 @@
+{ auth => { module => 'Authen::Simple::SSH',
+            args   => { host => 'hostname' } } }
