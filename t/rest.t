@@ -123,7 +123,7 @@ $t->get_ok('/rest/v1/items?limit=5')
 is(scalar @{ $t->tx->res->json}, 5, '5 items');
 
 # Test modification of items
-$t->post_ok('/rest/v1/items', json => { name => 'this should be a frog', description => 'ribbet', bid_increment => 5.50, bid_min => 100, start_ts => '2013-01-11', end_ts => '2014-02-03' })
+$t->post_ok('/rest/v1/items', json => { name => 'this should be a frog', description => 'ribbet', bid_increment => 5.50, bid_min => 99, start_ts => '2013-01-11', end_ts => '2014-02-03' })
   ->status_is(200)
   ->json_hasnt('/error')
   ->json_has('/id');
@@ -139,5 +139,58 @@ $t->put_ok("/rest/v1/items/$put_id", json => { name => "freddo frog" })
 $t->get_ok("/rest/v1/items/$put_id")
   ->status_is(200)
   ->json_is('/name', 'freddo frog');
+
+# BIDS
+
+# post a bid on this item
+# try to self-bid
+
+$t->post_ok("/rest/v1/items/$put_id/bids", json => { })
+  ->status_is(400);
+
+ok($t->tx->res->json->{error} =~ /cannot bid on their own items/, "can't bid on own items");
+
+# so create another user to do it
+my $buser = MAuction::DB::User->new(username => "bid_test_$$")->save();
+ok ($buser, 'user exists');
+like ($buser->id, qr/^\d+$/, 'bidding user has an id');
+
+$buser->generate_new_api_token();
+$buser->save();
+
+$t->ua->on(start => sub {
+               my ($ua, $tx) = @_;
+               $tx->req->headers->header('X-API-Token' =>  $buser->api_token);
+           });
+
+# try to bid again
+$t->post_ok("/rest/v1/items/$put_id/bids", json => { })
+  ->status_is(400)
+  ->json_is('/error', "no value provided for required field 'amount'");
+
+$t->post_ok("/rest/v1/items/$put_id/bids", json => { amount => 2.00 })
+  ->status_is(400);
+ok($t->tx->res->json->{error} =~ /bid is not at least the minimum bid amount/, "bid too little");
+
+$t->post_ok("/rest/v1/items/$put_id/bids", json => { amount => 112.00 })
+  ->status_is(200)
+  ->json_has('/id');
+
+$t->post_ok("/rest/v1/items/$put_id/bids", json => { amount => 113.00 })
+  ->status_is(200)
+  ->json_has('/id');
+
+$t->post_ok("/rest/v1/items/$put_id/bids", json => { amount => 111.00 })
+  ->status_is(400);
+ok($t->tx->res->json->{error} =~ /you cannot bid lower than your previous bids/, "bid less than before");
+
+# fetch all the bids for this item, we should have 2
+$t->get_ok("/rest/v1/items/$put_id/bids")
+  ->status_is(200);
+is(scalar @{ $t->tx->res->json }, 2, 'right number of bids on item');
+
+
+
+
 
 done_testing();

@@ -5,6 +5,16 @@ use warnings;
 
 use Mojo::Base 'Mojolicious::Controller';
 
+use Carp qw/confess/;
+
+sub query_args      { return () };
+sub db_class_read   { confess "was not overridden" }
+sub db_class_write  { confess "was not overridden" }
+sub get_method      { confess "was not overridden" }
+sub get_read_method { confess "was not overridden" }
+sub post_fields     { confess "was not overridden" }
+
+
 sub get_one {
     my $self = shift;
     my $class = $self->db_class_read;
@@ -38,9 +48,11 @@ sub get_collection {
     eval "require $class";
     die $@ if $@;
 
+    my %extra_args = $self->query_args;
+
     my $method = $self->get_read_method;
     my $collection = $class->$method(
-        query   => [ ],
+        query   => [ %extra_args ],
         limit   => $limit,
         offset  => $offset,
         sort_by => $sort
@@ -92,9 +104,14 @@ sub post {
             return $self->_render_set_exception($param, $@) if $@;
         }
     }
+    my %extra = $self->query_args;
+    foreach my $param (keys %extra) {
+        eval { $new->$param($extra{$param}) };
+        return $self->_render_set_exception($param, $@) if $@;
+    }
 
     if ($new->can('user_id')) {
- !       $new->user_id($self->stash->{user}->id);
+        $new->user_id($self->stash->{user}->id);
     }
 
     $self->_eval_save($new);

@@ -21,8 +21,9 @@ sub startup {
   $rest->delete('/items/:id')->to(controller => 'REST::Items', action => 'delete');
   $rest->put('/items/:id')->to(controller => 'REST::Items', action => 'put');
 
-  # Normal route to controller
-  # $r->get('/')->to('example#welcome');
+  # bids
+  $rest->post('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'post');
+  $rest->get('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'get_collection');
 }
 
 1;
