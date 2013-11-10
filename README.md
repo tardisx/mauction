@@ -12,4 +12,5 @@ Dependencies
 * Rose::DB::Object
 * DBI
 * DBD::Pg
+* an Authen::Simple::* module for your required authentication method.
 
