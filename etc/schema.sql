@@ -1,6 +1,7 @@
 DROP VIEW items_winners;
 DROP TABLE bids;
 DROP TABLE items;
+DROP TABLE sessions;
 DROP TABLE users;
 DROP FUNCTION current_winner_for_item(this_item_id INT);
 DROP TYPE user_bid;
@@ -8,9 +9,18 @@ DROP TYPE user_bid;
 CREATE TABLE users (
   id         SERIAL NOT NULL PRIMARY KEY,
   username   TEXT   NOT NULL UNIQUE,
+  last_login TIMESTAMP NOT NULL,
   api_token  TEXT            UNIQUE
 );
 CREATE UNIQUE INDEX lower_username ON users (lower(username));
+
+CREATE TABLE sessions (
+  id              SERIAL NOT NULL PRIMARY KEY,
+  uid             INT NOT NULL REFERENCES "users"(id),
+  session_expiry  TIMESTAMP,
+  session         TEXT
+);
+
 
 CREATE TABLE items (
   id              SERIAL        NOT NULL PRIMARY KEY,

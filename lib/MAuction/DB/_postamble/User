@@ -1,5 +1,7 @@
 use Digest::MD5;
 use Time::HiRes qw/time/;
+use MAuction::DB::Session;
+use MAuction::DB::Session::Manager;
 
 sub generate_new_api_token {
   my $self = shift;
@@ -16,3 +18,28 @@ sub generate_new_api_token {
 
   return $self->api_token;
 }
+
+sub create_new_session {
+  my $self   = shift;
+  my $config = shift || {};
+
+  # delete old sessions
+  MAuction::DB::Session::Manager->delete_sessions(where => [ session_expiry => { lt => DateTime->now } ] ); 
+
+  my $expiry_seconds = 86400;
+  my $expiry = DateTime->now->add( seconds => $expiry_seconds );
+
+  # $self->session_expiry($expiry);
+
+  my $sha1 = Digest::SHA->new('sha1');
+  $sha1->add($self->username);
+  $sha1->add(rand());
+  $sha1->add(time());
+  my $digest = $sha1->b64digest;
+
+  my $session = MAuction::DB::Session->new(session => $digest, session_expiry => $expiry, user => $self);
+  $session->save();
+  return $session;
+}
+
+  

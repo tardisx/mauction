@@ -1,3 +1,3 @@
 %layout 'default';
 
-HELLO!
+HELLO! <%= $user->username %>

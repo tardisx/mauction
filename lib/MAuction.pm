@@ -37,8 +37,13 @@ sub startup {
   $rest->get('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'get_collection');
 
   # web ui
+  # unauthenticated parts
+  $r->get('/user/login')->to(controller => 'User', action => 'login')->name('user-login');
+  $r->post('/user/login')->to(controller => 'User', action => 'login')->name('user-login-post');
+
+  # requires session
   my $ui = $r->bridge->to(controller => 'User', action => 'check_user')->bridge('/');
-  $ui->get('/')->to(controller => 'Home', action => 'index');
+  $ui->get('/')->to(controller => 'Home', action => 'index')->name('home');
 }
 
 1;

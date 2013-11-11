@@ -2,11 +2,16 @@ package MAuction::Web::Controller::User;
 
 use strict;
 use warnings;
+use DateTime;
 
 use Mojo::Base 'Mojolicious::Controller';
 
+use MAuction::DB::User;
 use MAuction::DB::User::Manager;
+use MAuction::DB::Session::Manager;
 
+# check if this user has either a valid session or has supplied an API key
+# in the header
 sub check_user {
     my $self  = shift;
 
@@ -19,6 +24,7 @@ sub check_user {
     return 0;
 }
 
+# check the API token
 sub check_token {
     my $self = shift;
 
@@ -40,13 +46,51 @@ sub check_token {
     return 1;
 }
 
+# check the interactive user's session key, if it is valid load the user object
+# into the stash
 sub check_session {
     my $self = shift;
 
-    # XXX check session here
+    my $session_key = $self->session->{key};
+    if ($session_key) {
+        $self->app->log->debug("checking session key of $session_key");
+        my $res = MAuction::DB::Session::Manager->get_sessions( 
+            query => [ session => $session_key,
+                       session_expiry  => { gt => DateTime->now() }, ]
+        );
+        if ($res && $res->[0]) {
+            $self->app->log->debug("session is good");
+            $self->stash->{user} = $res->[0]->user;
+            return 1;
+        }
+    }
     $self->app->log->debug("no valid session");
     return 0;
 }
 
+sub login {
+    my $self = shift;
+    my $username = $self->param('username');
+    my $password = $self->param('password');
+
+    if ($self->req->method =~ /post/i && $username && $password) {
+        $self->app->log->info("attempting login for $username");
+        if ($self->stash->{authen}->authenticate($username, $password)) {
+            $self->app->log->info("login successful for $username");
+            my $user = MAuction::DB::User->new(username => $username, last_login => DateTime->now())->insert_or_update;
+            $self->session(key => $user->create_new_session->session);
+            $self->redirect_to($self->url_for('home'));
+        }
+        else {
+            $self->app->log->info("failed authentication");
+            $self->stash->{message} = 'login failed';
+        }
+    }
+  
+    $self->render();
+  
+
+}
 
 1;
+
