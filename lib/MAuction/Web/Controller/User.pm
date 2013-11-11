@@ -83,6 +83,9 @@ sub login {
     my $username = $self->param('username');
     my $password = $self->param('password');
 
+    utf8::encode($username);
+    utf8::encode($password);
+
     if ($self->req->method =~ /post/i && $username && $password) {
         $self->app->log->info("attempting login for $username");
         if ($self->stash->{authen}->authenticate($username, $password)) {
