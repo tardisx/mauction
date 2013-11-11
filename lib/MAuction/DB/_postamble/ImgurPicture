@@ -1,0 +1,26 @@
+use Carp::Croak qw/croak/;
+
+__PACKAGE__->meta->column('imgur_code')->add_trigger(
+  on_set => sub {
+    my $self = shift;
+    my $code = $self->imgur_code;
+
+    # http://imgur.com/gallery/YkKloQk
+    $code =~ s{.*imgur.com/gallery/}{};
+
+    # http://i.imgur.com/O7bzT3n.jpg
+    $code =~ s{.*imgur.com/(\w+)\.\w+$}{$1};
+
+    # http://imgur.com/YkKloQk
+    $code =~ s{.*imgur.com/(\w+)$}{$1};
+
+    # by now the code should be just \w+
+    if ($code =~ /^\w+$/) {
+        $self->imgur_code($code);
+        return;
+    }
+    croak "bad code supplied for imgur: " . $self->imgur_code;
+});
+
+1;
+

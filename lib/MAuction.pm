@@ -34,7 +34,11 @@ sub startup {
 
   # bids
   $rest->post('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'post');
-  $rest->get('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'get_collection');
+  $rest->get ('/items/:item_id/bids')->to(controller => 'REST::Bids', action => 'get_collection');
+
+  # images
+  $rest->post('/items/:item_id/images')->to(controller => 'REST::Image', action => 'post');
+  $rest->get ('/items/:item_id/images')->to(controller => 'REST::Image', action => 'get_collection');
 
   # web ui
   # unauthenticated parts

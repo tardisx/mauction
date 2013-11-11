@@ -1,5 +1,6 @@
 DROP VIEW items_winners;
 DROP TABLE bids;
+DROP TABLE imgur_pictures;
 DROP TABLE items;
 DROP TABLE sessions;
 DROP TABLE users;
@@ -31,6 +32,12 @@ CREATE TABLE items (
   bid_min  NUMERIC(7,2)         NOT NULL,
   start_ts        TIMESTAMP     NOT NULL,
   end_ts          TIMESTAMP     NOT NULL
+);
+
+CREATE TABLE imgur_pictures (
+  id              SERIAL     NOT NULL PRIMARY KEY,
+  item_id         INT        NOT NULL REFERENCES items(id),
+  imgur_code      TEXT       NOT NULL
 );
 
 CREATE TABLE bids (

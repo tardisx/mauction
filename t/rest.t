@@ -189,8 +189,28 @@ $t->get_ok("/rest/v1/items/$put_id/bids")
   ->status_is(200);
 is(scalar @{ $t->tx->res->json }, 2, 'right number of bids on item');
 
+# add some images
+$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'YkKloQk' })
+  ->status_is(200)
+  ->json_has('/id');
 
+$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'http://imgur.com/gallery/YkKloQk' })
+  ->status_is(200)
+  ->json_has('/id');
 
+$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'http://imgur.com/YkKloQk' })
+  ->status_is(200)
+  ->json_has('/id');
+
+$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'http://i.imgur.com/O7bzT3n.jpg' })
+  ->status_is(200)
+  ->json_has('/id');
+
+# should have 4
+$t->get_ok("/rest/v1/items/$put_id/images")
+  ->status_is(200);
+
+ok(scalar @{ $t->tx->res->json } == 4, '4 images good');
 
 
 done_testing();
