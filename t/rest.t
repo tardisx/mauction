@@ -16,7 +16,7 @@ $t->get_ok('/rest/v1/items')
   ->status_is(400)
   ->json_is('/error', 'no token or session supplied');
 
-my $user = MAuction::DB::User->new(username => "test_$$")->save();
+my $user = MAuction::DB::User->new(username => "test_$$", last_login => DateTime->now())->save();
 ok ($user, 'user exists');
 like ($user->id, qr/^\d+$/, 'user has an id');
 
@@ -151,7 +151,7 @@ $t->post_ok("/rest/v1/items/$put_id/bids", json => { })
 ok($t->tx->res->json->{error} =~ /cannot bid on their own items/, "can't bid on own items");
 
 # so create another user to do it
-my $buser = MAuction::DB::User->new(username => "bid_test_$$")->save();
+my $buser = MAuction::DB::User->new(username => "bid_test_$$", last_login => DateTime->now())->save();
 ok ($buser, 'user exists');
 like ($buser->id, qr/^\d+$/, 'bidding user has an id');
 

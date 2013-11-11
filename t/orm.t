@@ -10,11 +10,11 @@ use MAuction::DB::Bid;
 
 my $t = Test::Mojo->new('MAuction');
 
-my $user = MAuction::DB::User->new(username => "test_$$")->save();
+my $user = MAuction::DB::User->new(username => "test_$$", last_login => DateTime->now())->save();
 ok ($user, 'user exists');
 like ($user->id, qr/^\d+$/, 'user has an id');
 
-my $buser = MAuction::DB::User->new(username => "test2_$$")->save();
+my $buser = MAuction::DB::User->new(username => "test2_$$", last_login => DateTime->now())->save();
 ok ($buser, 'user2 exists');
 like ($buser->id, qr/^\d+$/, 'user2 has an id');
 

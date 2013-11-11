@@ -42,7 +42,7 @@ sub startup {
   $r->post('/user/login')->to(controller => 'User', action => 'login')->name('user-login-post');
 
   # requires session
-  my $ui = $r->bridge->to(controller => 'User', action => 'check_user')->bridge('/');
+  my $ui = $r->bridge->to(controller => 'User', action => 'check_user_with_redirect')->bridge('/');
   $ui->get('/')->to(controller => 'Home', action => 'index')->name('home');
 }
 

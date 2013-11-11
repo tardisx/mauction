@@ -11,14 +11,14 @@ use MAuction::DB::ItemsWinner;
 
 my $t = Test::Mojo->new('MAuction');
 
-my $ouser = MAuction::DB::User->new(username => "test_$$")->save();
+my $ouser = MAuction::DB::User->new(username => "test_$$", last_login => DateTime->now())->save();
 ok ($ouser, 'user exists');
 like ($ouser->id, qr/^\d+$/, 'user has an id');
 
 my $pid = $$;
 my $busers = {};
 foreach my $username (qw/buser1 buser2 buser3/) {
-  my $auser = MAuction::DB::User->new(username => "${username}_${pid}")->save();
+  my $auser = MAuction::DB::User->new(username => "${username}_${pid}", last_login => DateTime->now())->save();
   $busers->{$username} = $auser;
 }
 

@@ -10,6 +10,16 @@ use MAuction::DB::User;
 use MAuction::DB::User::Manager;
 use MAuction::DB::Session::Manager;
 
+# check if the user is logged in, if not redirect them to the login page.
+sub check_user_with_redirect {
+    my $self  = shift;
+    if (! $self->check_user) {
+        return $self->redirect_to($self->url_for('user-login'));
+    }
+
+    return 1;
+}
+
 # check if this user has either a valid session or has supplied an API key
 # in the header
 sub check_user {
