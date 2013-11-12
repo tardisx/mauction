@@ -48,6 +48,8 @@ sub startup {
   # requires session
   my $ui = $r->bridge->to(controller => 'User', action => 'check_user_with_redirect')->bridge('/');
   $ui->get('/')->to(controller => 'Home', action => 'index')->name('home');
+  $ui->get('/item/:id')->to(controller => 'Item', action => 'item_without_name')->name('item-by-id');
+  $ui->get('/item/:id/:name')->to(controller => 'Item', action => 'item_name')->name('item-by-id-and-name');
 }
 
 1;

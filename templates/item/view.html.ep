@@ -1,0 +1,4 @@
+%layout 'default';
+%title $item->name;
+
+WOW it's <%= $item->name %>.
