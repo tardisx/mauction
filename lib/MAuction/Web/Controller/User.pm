@@ -83,14 +83,17 @@ sub login {
     my $username = $self->param('username');
     my $password = $self->param('password');
 
-    utf8::encode($username);
-    utf8::encode($password);
+    utf8::encode($username) if ($username);
+    utf8::encode($password) if ($password);
 
     if ($self->req->method =~ /post/i && $username && $password) {
         $self->app->log->info("attempting login for $username");
         if ($self->stash->{authen}->authenticate($username, $password)) {
             $self->app->log->info("login successful for $username");
-            my $user = MAuction::DB::User->new(username => $username, last_login => DateTime->now())->insert_or_update;
+            my $user = MAuction::DB::User->new(username   => $username,
+                                               last_login => DateTime->now());
+            $user->insert_or_update;
+
             $self->session(key => $user->create_new_session->session);
             $self->redirect_to($self->url_for('home'));
         }
