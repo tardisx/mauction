@@ -1,0 +1,17 @@
+sub url_name {
+    my $self = shift;
+    my $name = $self->name;
+
+    $name =~ s/[^\w\s\-]//g;  # remove non chars and spaces
+    $name =~ s/[\s_]/-/g;     # turn spaces and _ into -
+    $name =~ s/\-+/-/g;       # multiple - into 1
+    $name =  lc $name;        # lower case
+
+    if (! $name) {
+        $name = 'no-name';
+    }
+
+    return $name;
+}
+
+1;
