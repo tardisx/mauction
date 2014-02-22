@@ -11,7 +11,7 @@ use MAuction::DB::Bid;
 use DateTime;
 
 my $now    = DateTime->now;
-my $future = DateTime->now->add(days => 1);
+my $future = DateTime->now->add(days => 4);
 
 my $t = Test::Mojo->new('MAuction');
 
