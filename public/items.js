@@ -24,8 +24,8 @@ function render_item(item) {
         .replace('DESCR', item.description)
         .replace('NAME', item.name);
 
-    if (item.current_winner_for_item) {
-        new_item = new_item.replace('HIGHBID', item.current_winner_for_item);
+    if (item.current_price) {
+        new_item = new_item.replace('HIGHBID', item.current_price);
     }
 
     else {
