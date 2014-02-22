@@ -1,4 +1,3 @@
-DROP VIEW items_winners;
 DROP TABLE bids;
 DROP TABLE imgur_pictures;
 DROP TABLE items;
@@ -31,7 +30,9 @@ CREATE TABLE items (
   bid_increment   NUMERIC(5,2 ) NOT NULL,
   bid_min  NUMERIC(7,2)         NOT NULL,
   start_ts        TIMESTAMP     NOT NULL,
-  end_ts          TIMESTAMP     NOT NULL
+  end_ts          TIMESTAMP     NOT NULL,
+  current_winner  INT           REFERENCES users(id),
+  current_price    NUMERIC(7,2)
 );
 
 CREATE TABLE imgur_pictures (
@@ -98,7 +99,7 @@ $$
         -- next case, they bid more than the proxy winner, but less than the highest amount
         ELSEIF this_bid.amount > winner_proxy.amount AND this_bid.amount < winner_highest.amount AND winner_proxy.user_id != this_bid.user_id THEN
           winner_proxy.amount  = this_bid.amount + item.bid_increment; -- xxx edge case of slightly below max?
-          -- winner does not change  
+          -- winner does not change
 
         -- next case, they bid more than the proxy winners highest bid
         ELSEIF this_bid.amount > winner_highest.amount AND winner_proxy.user_id != this_bid.user_id THEN
@@ -115,11 +116,6 @@ $$
     RETURN winner_proxy;
   END;
 $$ LANGUAGE plpgsql;
-
-CREATE VIEW items_winners AS
-  SELECT items.*, current_winner_for_item(id)
-    FROM items;
-
 
 CREATE OR REPLACE FUNCTION validate_bid() RETURNS TRIGGER
 AS $$
@@ -176,7 +172,26 @@ AS $$
     END;
 $$ LANGUAGE plpgsql;
 
+-- the above function has ensured that the new bid is valid, this one
+-- updates the fields on the item to respect the current winner and price
+CREATE OR REPLACE FUNCTION update_item_after_bid() RETURNS TRIGGER
+AS $$
+  DECLARE
+    current_winner user_bid;
+  BEGIN
+    current_winner = current_winner_for_item(NEW.item_id);
+    UPDATE items SET current_winner = current_winner.user_id, current_price = current_winner.amount WHERE id = NEW.item_id;
+    RETURN NEW;
+  END;
+
+$$ LANGUAGE plpgsql;
+
+
+
 CREATE TRIGGER validate_bid BEFORE INSERT OR UPDATE OR DELETE ON bids
   FOR EACH ROW EXECUTE PROCEDURE validate_bid();
+
+CREATE TRIGGER update_item_after_bid AFTER INSERT ON bids
+  FOR EACH ROW EXECUTE PROCEDURE update_item_after_bid();
 
 

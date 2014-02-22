@@ -7,7 +7,6 @@ use Test::Exception;
 use MAuction::DB::User;
 use MAuction::DB::Item;
 use MAuction::DB::Bid;
-use MAuction::DB::ItemsWinner;
 
 use DateTime;
 
@@ -79,7 +78,8 @@ $t->get_ok('/rest/v1/items/'.$id)
   ->status_is(200)
   ->json_is('/id', $id)
   ->json_is('/name', 'mahogany cabinet')
-  ->json_has('/current_winner_for_item');
+  ->json_has('/current_winner')
+  ->json_has('/current_price');
 
 $t->get_ok('/rest/v1/items/1234567890')
   ->status_is(404)
@@ -193,28 +193,5 @@ like($t->tx->res->json->{error}, qr/you cannot bid lower than your previous bids
 $t->get_ok("/rest/v1/items/$put_id/bids")
   ->status_is(200);
 is(scalar @{ $t->tx->res->json }, 2, 'right number of bids on item');
-
-# add some images
-$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'YkKloQk' })
-  ->status_is(200)
-  ->json_has('/id');
-
-$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'http://imgur.com/gallery/YkKloQk' })
-  ->status_is(200)
-  ->json_has('/id');
-
-$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'http://imgur.com/YkKloQk' })
-  ->status_is(200)
-  ->json_has('/id');
-
-$t->post_ok("/rest/v1/items/$put_id/images", json => { imgur_code => 'http://i.imgur.com/O7bzT3n.jpg' })
-  ->status_is(200)
-  ->json_has('/id');
-
-# should have 4
-$t->get_ok("/rest/v1/items/$put_id/images")
-  ->status_is(200);
-
-ok(scalar @{ $t->tx->res->json } == 4, '4 images good');
 
 done_testing();

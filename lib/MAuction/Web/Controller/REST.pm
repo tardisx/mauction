@@ -7,12 +7,12 @@ use Mojo::Base 'Mojolicious::Controller';
 
 use Carp qw/confess/;
 
-sub query_args      { return () };
-sub db_class_read   { confess "was not overridden" }
-sub db_class_write  { confess "was not overridden" }
-sub get_method      { confess "was not overridden" }
-sub get_read_method { confess "was not overridden" }
-sub post_fields     { confess "was not overridden" }
+sub query_args       { return () };
+sub db_class_read    { confess "was not overridden" }
+sub db_class_write   { confess "was not overridden" }
+sub get_method       { confess "was not overridden" }
+sub get_extra_fields { () }
+sub post_fields      { confess "was not overridden" }
 
 
 sub get_one {
@@ -35,7 +35,7 @@ sub get_one {
         return $self->render(status => 404, json => { error => 'no such object id: '.$id });
     }
 
-    return $self->render(status => 200, json => $new->as_tree );
+    return $self->render(status => 200, json => { %{ $new->as_tree }, $self->get_extra_fields($new) });
 }
 
 sub get_collection {
@@ -50,7 +50,7 @@ sub get_collection {
 
     my %extra_args = $self->query_args;
 
-    my $method = $self->get_read_method;
+    my $method = $self->get_method;
     my $collection = $class->$method(
         query   => [ %extra_args ],
         limit   => $limit,
@@ -58,7 +58,7 @@ sub get_collection {
         sort_by => $sort
     );
 
-    return $self->render(status => 200, json => [ map { $_->as_tree } @$collection ] );
+    return $self->render(status => 200, json => [ map { { %{ $_->as_tree }, $self->get_extra_fields($_) } } @$collection ] );
 }
 
 sub delete {

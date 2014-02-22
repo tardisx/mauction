@@ -27,12 +27,24 @@ my $item = MAuction::DB::Item->new(user_id => $user->id,
                                    bid_min  => 10.00,
                                   )->save();
 
+my $id = $item->id;
+
 my %bid_options = ( 'item_id' => $item->id, user_id => $buser->id );
 
 throws_ok { MAuction::DB::Bid->new(%bid_options, amount => 1)->save } qr/bid is not at least the minimum bid amount/, 'too small bid ok';
 lives_ok  { MAuction::DB::Bid->new(%bid_options, amount => 10)->save } 'bid at minimum ok';
+
+my $item_c = MAuction::DB::Item->new(id => $id)->load();
+is ($item_c->current_winner, $buser->id);
+is ($item_c->current_price, '10.00');
+
 throws_ok { MAuction::DB::Bid->new(%bid_options, amount => 12)->save } qr/bid of 12.00 does not exceed winning bid of 10.00 by at least 2.50/, 'second bid not high enough';
 lives_ok  { MAuction::DB::Bid->new(%bid_options, amount => 12.50)->save } 'second big high enough';
+
+# still the same price and winner
+$item_c = MAuction::DB::Item->new(id => $id)->load();
+is ($item_c->current_winner, $buser->id);
+is ($item_c->current_price, '10.00');
 
 
 done_testing();

@@ -7,7 +7,6 @@ use Test::Exception;
 use MAuction::DB::User;
 use MAuction::DB::Item;
 use MAuction::DB::Bid;
-use MAuction::DB::ItemsWinner;
 
 my $t = Test::Mojo->new('MAuction');
 
@@ -52,6 +51,7 @@ push @bids, { name => "user1: tries to reduce the potential for pain", # but can
 my %bid_options = ( 'item_id' => $item->id );
 
 foreach my $abid (@bids) {
+
   if ($abid->{exception}) {
     throws_ok { MAuction::DB::Bid->new(%bid_options, user_id => $abid->{user}->id, amount => $abid->{amount})->save() }
               $abid->{exception}, $abid->{name} . ' - bid rejected correctly';
@@ -60,16 +60,10 @@ foreach my $abid (@bids) {
     lives_ok { MAuction::DB::Bid->new(%bid_options, user_id => $abid->{user}->id, amount => $abid->{amount})->save() }
              $abid->{name} . ' - bid inserted';
   }
+  my $item_reload = MAuction::DB::Item->new(id => $item->id)->load;
 
-  my $winner_row = MAuction::DB::ItemsWinner->new(id => $item->id)->load();
-  my $winner =  $winner_row->current_winner_for_item;
-
-  $winner =~ s/[\(\)]//g if $winner;
-  my ($win_user, $win_amount) = split /,/, ($winner || '');
-  $win_amount += 0 if ($win_amount);
-
-  is ($win_user,  $abid->{win_user} ? $abid->{win_user}->id : undef, $abid->{name} . ' - correct winning user');
-  is ($win_amount, $abid->{win_amount}, $abid->{name} . ' - correct winning amount');
+  is ($item_reload->current_winner,  $abid->{win_user} ? $abid->{win_user}->id : undef, $abid->{name} . ' - correct winning user');
+  cmp_ok ($item_reload->current_price, '==', $abid->{win_amount}, $abid->{name} . ' - correct winning amount');
 }
 
 
