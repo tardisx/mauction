@@ -1,3 +1,17 @@
 %layout 'default';
 
-HELLO! <%= $user->username %>
+<script src="/items.js"></script>
+
+<h1>HELLO! <%= $user->username %></h1>
+
+<div id="items">
+</div>
+
+<script>
+
+$.ajax('/rest/v1/items')
+ .success(function(items) {
+    render_items('items', items);
+ });
+</script>
+
