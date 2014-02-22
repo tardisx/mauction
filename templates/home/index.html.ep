@@ -2,8 +2,6 @@
 
 <script src="/items.js"></script>
 
-<h1>HELLO! <%= $user->username %></h1>
-
 <div id="items">
 </div>
 
