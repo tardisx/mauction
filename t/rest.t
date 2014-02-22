@@ -9,6 +9,11 @@ use MAuction::DB::Item;
 use MAuction::DB::Bid;
 use MAuction::DB::ItemsWinner;
 
+use DateTime;
+
+my $now    = DateTime->now;
+my $future = DateTime->now->add(days => 1);
+
 my $t = Test::Mojo->new('MAuction');
 
 # try a rest request with no token
@@ -58,11 +63,11 @@ $t->post_ok('/rest/v1/items', json => { name => 'mahogany cabinet', description 
   ->status_is(400)
   ->json_is('/error', "an invalid timestamp was provided for the field 'start_ts'");
 
-$t->post_ok('/rest/v1/items', json => { name => 'mahogany cabinet', description => 'amazing quality', bid_increment => 5.50, bid_min => 100, start_ts => '2013-01-11', end_ts => 'whenever' })
+$t->post_ok('/rest/v1/items', json => { name => 'mahogany cabinet', description => 'amazing quality', bid_increment => 5.50, bid_min => 100, start_ts => $now->date, end_ts => 'whenever' })
   ->status_is(400)
   ->json_is('/error', "an invalid timestamp was provided for the field 'end_ts'");
 
-$t->post_ok('/rest/v1/items', json => { name => 'mahogany cabinet', description => 'amazing quality', bid_increment => 5.50, bid_min => 100, start_ts => '2013-01-11', end_ts => '2014-02-03' })
+$t->post_ok('/rest/v1/items', json => { name => 'mahogany cabinet', description => 'amazing quality', bid_increment => 5.50, bid_min => 100, start_ts => $now->date, end_ts => $future->date })
   ->status_is(200)
   ->json_hasnt('/error')
   ->json_has('/id');
@@ -96,7 +101,7 @@ $t->delete_ok('/rest/v1/items/'.$id)
 # create some items to be in the collection
 my $ids = {};
 foreach (1..10) {
-  $t->post_ok('/rest/v1/items', json => { name => 'collection item', description => 'xx', bid_increment => 5.50, bid_min => 100, start_ts => '2013-01-11', end_ts => '2014-02-03' })
+  $t->post_ok('/rest/v1/items', json => { name => 'collection item', description => 'xx', bid_increment => 5.50, bid_min => 100, start_ts => $now->date, end_ts => $future->date })
     ->status_is(200)
     ->json_hasnt('/error')
     ->json_has('/id');
@@ -123,7 +128,7 @@ $t->get_ok('/rest/v1/items?limit=5')
 is(scalar @{ $t->tx->res->json}, 5, '5 items');
 
 # Test modification of items
-$t->post_ok('/rest/v1/items', json => { name => 'this should be a frog', description => 'ribbet', bid_increment => 5.50, bid_min => 99, start_ts => '2013-01-11', end_ts => '2014-02-03' })
+$t->post_ok('/rest/v1/items', json => { name => 'this should be a frog', description => 'ribbet', bid_increment => 5.50, bid_min => 99, start_ts => $now->date, end_ts => $future->date })
   ->status_is(200)
   ->json_hasnt('/error')
   ->json_has('/id');
@@ -148,7 +153,7 @@ $t->get_ok("/rest/v1/items/$put_id")
 $t->post_ok("/rest/v1/items/$put_id/bids", json => { })
   ->status_is(400);
 
-ok($t->tx->res->json->{error} =~ /cannot bid on their own items/, "can't bid on own items");
+like($t->tx->res->json->{error}, qr/cannot bid on their own items/i, "can't bid on own items");
 
 # so create another user to do it
 my $buser = MAuction::DB::User->new(username => "bid_test_$$", last_login => DateTime->now())->save();
@@ -182,7 +187,7 @@ $t->post_ok("/rest/v1/items/$put_id/bids", json => { amount => 113.00 })
 
 $t->post_ok("/rest/v1/items/$put_id/bids", json => { amount => 111.00 })
   ->status_is(400);
-ok($t->tx->res->json->{error} =~ /you cannot bid lower than your previous bids/, "bid less than before");
+like($t->tx->res->json->{error}, qr/you cannot bid lower than your previous bids/i, "bid less than before");
 
 # fetch all the bids for this item, we should have 2
 $t->get_ok("/rest/v1/items/$put_id/bids")
@@ -211,6 +216,5 @@ $t->get_ok("/rest/v1/items/$put_id/images")
   ->status_is(200);
 
 ok(scalar @{ $t->tx->res->json } == 4, '4 images good');
-
 
 done_testing();
