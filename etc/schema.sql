@@ -9,7 +9,7 @@ DROP TYPE user_bid;
 CREATE TABLE users (
   id         SERIAL NOT NULL PRIMARY KEY,
   username   TEXT   NOT NULL UNIQUE,
-  last_login TIMESTAMP NOT NULL,
+  last_login TIMESTAMP WITH TIME ZONE NOT NULL,
   api_token  TEXT            UNIQUE
 );
 CREATE UNIQUE INDEX lower_username ON users (lower(username));
@@ -17,7 +17,7 @@ CREATE UNIQUE INDEX lower_username ON users (lower(username));
 CREATE TABLE sessions (
   id              SERIAL NOT NULL PRIMARY KEY,
   uid             INT NOT NULL REFERENCES "users"(id),
-  session_expiry  TIMESTAMP,
+  session_expiry  TIMESTAMP WITH TIME ZONE,
   session         TEXT
 );
 
@@ -29,8 +29,8 @@ CREATE TABLE items (
   description     TEXT          NOT NULL,
   bid_increment   NUMERIC(5,2 ) NOT NULL,
   bid_min  NUMERIC(7,2)         NOT NULL,
-  start_ts        TIMESTAMP     NOT NULL,
-  end_ts          TIMESTAMP     NOT NULL,
+  start_ts        TIMESTAMP WITH TIME ZONE     NOT NULL,
+  end_ts          TIMESTAMP WITH TIME ZONE     NOT NULL,
   current_winner  INT           REFERENCES users(id),
   current_price    NUMERIC(7,2)
 );
@@ -45,7 +45,7 @@ CREATE TABLE bids (
   id        SERIAL          NOT NULL PRIMARY KEY,
   user_id  INT              NOT NULL REFERENCES users(id),
   item_id   INT             NOT NULL REFERENCES items(id),
-  ts        TIMESTAMP       NOT NULL,
+  ts        TIMESTAMP WITH TIME ZONE       NOT NULL,
   amount    NUMERIC(7,2)    NOT NULL
 );
 
