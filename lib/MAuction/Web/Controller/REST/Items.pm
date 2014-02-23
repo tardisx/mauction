@@ -1,12 +1,20 @@
 package MAuction::Web::Controller::REST::Items;
 
+use Time::Duration qw/duration concise/;
+
 use Mojo::Base 'MAuction::Web::Controller::REST';
 
 sub db_class_read   { "MAuction::DB::Item" }
 sub db_class_write  { "MAuction::DB::Item" }
 sub get_method      { "get_items" }
 sub post_fields     { qw/name description bid_increment bid_min start_ts end_ts/ }
-
+sub get_extra_fields { shift; my $item = shift;
+                       return (
+                           remaining_secs   => ($item->end_ts->epoch - time()),
+                           remaining_string => duration($item->end_ts->epoch - time()),
+                           remaining_string_concise => concise(duration($item->end_ts->epoch - time()))
+                       );
+                   }
 
 =head3 POST /rest/v1/items
 

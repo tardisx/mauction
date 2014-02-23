@@ -2,6 +2,7 @@
 %title $item->name;
 
 <script src="/items.js"></script>
+<script src="/general.js"></script>
 
 <div id="item">
 </div>
@@ -10,6 +11,7 @@
 $.ajax('/rest/v1/items/<%= $item->id %>')
  .success(function(item) {
     $('#item').html(render_item_detail_html(item));
+    $('#remain').html(item.remaining_string);
  });
 </script>
 
