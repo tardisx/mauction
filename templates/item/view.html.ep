@@ -1,4 +1,16 @@
 %layout 'default';
 %title $item->name;
 
-WOW it's <%= $item->name %>.
+<script src="/items.js"></script>
+
+<div id="item">
+</div>
+
+<script>
+$.ajax('/rest/v1/items/<%= $item->id %>')
+ .success(function(item) {
+    $('#item').html(render_item_detail_html(item));
+ });
+</script>
+
+

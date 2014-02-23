@@ -6,10 +6,9 @@
 </div>
 
 <script>
-
 $.ajax('/rest/v1/items')
  .success(function(items) {
-    render_items('items', items);
+    render_item_collection('items', items);
  });
 </script>
 
