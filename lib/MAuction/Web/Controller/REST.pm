@@ -13,7 +13,8 @@ sub db_class_write   { confess "was not overridden" }
 sub get_method       { confess "was not overridden" }
 sub get_extra_fields { () }
 sub post_fields      { confess "was not overridden" }
-
+sub load_with        { () };
+sub sanitise         { };
 
 sub get_one {
     my $self = shift;
@@ -30,12 +31,15 @@ sub get_one {
     eval "require $class";
     die $@ if $@;
 
-    my $new = $class->new(id => $id)->load(speculative => 1);
+    my $new = $class->new(id => $id)->load(speculative => 1, $self->load_with);
     if (! $new) {
         return $self->render(status => 404, json => { error => 'no such object id: '.$id });
     }
 
-    return $self->render(status => 200, json => { %{ $new->as_tree }, $self->get_extra_fields($new) });
+    my $data = $new->as_tree();
+    $self->sanitise($data);
+
+    return $self->render(status => 200, json => { %{ $data }, $self->get_extra_fields($new) });
 }
 
 sub get_collection {

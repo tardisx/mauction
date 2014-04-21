@@ -23,6 +23,7 @@ sub startup {
 
   # REST interface
   # They are rooted at /rest
+  # REST calls require an authenticated user
   my $rest = $r->bridge->to(controller => 'User', action => 'check_user')->bridge('/rest/v1');
 
   # items
