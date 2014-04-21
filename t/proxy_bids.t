@@ -63,7 +63,8 @@ foreach my $abid (@bids) {
   my $item_reload = MAuction::DB::Item->new(id => $item->id)->load;
 
   is ($item_reload->current_winner,  $abid->{win_user} ? $abid->{win_user}->id : undef, $abid->{name} . ' - correct winning user');
-  cmp_ok ($item_reload->current_price, '==', $abid->{win_amount}, $abid->{name} . ' - correct winning amount');
+  cmp_ok ($item_reload->current_price, '==', $abid->{win_amount}, $abid->{name} . ' - correct winning amount') if (defined  $abid->{win_amount});
+  ok (! defined $item_reload->current_price) if (! defined  $abid->{win_amount});
 }
 
 
