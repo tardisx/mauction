@@ -31,7 +31,10 @@ sub get_one {
     eval "require $class";
     die $@ if $@;
 
-    my $new = $class->new(id => $id)->load(speculative => 1, $self->load_with);
+    my %with = ();
+    $with{with} = [ $self->load_with ] if ($self->load_with);
+
+    my $new = $class->new(id => $id)->load(speculative => 1, %with);
     if (! $new) {
         return $self->render(status => 404, json => { error => 'no such object id: '.$id });
     }
@@ -56,13 +59,17 @@ sub get_collection {
 
     my $method = $self->get_method;
     my $collection = $class->$method(
+        with_objects => [ $self->load_with ],
         query   => [ %extra_args ],
         limit   => $limit,
         offset  => $offset,
         sort_by => $sort
     );
 
-    return $self->render(status => 200, json => [ map { { %{ $_->as_tree }, $self->get_extra_fields($_) } } @$collection ] );
+    my $data = [ map { { %{ $_->as_tree }, $self->get_extra_fields($_) } } @$collection ];
+    $self->sanitise($_) foreach @$data;
+
+    return $self->render(status => 200, json => $data);
 }
 
 sub delete {
