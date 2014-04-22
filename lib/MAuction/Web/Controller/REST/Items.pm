@@ -16,13 +16,13 @@ sub get_extra_fields { shift; my $item = shift;
                        );
                    }
 # when loading items, load up the user object details as well
-sub load_with { return ( with => ['user_obj'] ) }
+sub load_with { return ( with => ['user', 'current_winner_user'] ) }
 # sanitise the user object, since any other user can see this
 sub sanitise {
     shift;
     my $d = shift;
-    delete $d->{user_obj}->{id};
-    delete $d->{user_obj}->{api_token};
+    delete $d->{$_}->{id}        foreach (qw/ user current_winner_user/ );
+    delete $d->{$_}->{api_token} foreach (qw/ user current_winner_user /);
 }
 
 

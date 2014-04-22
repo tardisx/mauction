@@ -13,7 +13,7 @@ BEGIN {
       rmdir $fn;
       next;
     }
-    unlink $fn unless $fn =~ /Object.pm/
+    unlink $fn unless $fn =~ /Object.pm|CM.pm/
   }
 }
 
@@ -22,13 +22,14 @@ use lib 'lib';
 
 use MAuction::DB;
 use Rose::DB::Object::Loader;
-
+use MAuction::DB::CM;
 
 my $loader = Rose::DB::Object::Loader->new(
   db => MAuction::DB->new(),
   class_prefix => 'MAuction::DB',
   base_classes => [qw/MAuction::DB::Object/],
   include_views => 1,
+  convention_manager => 'MAuction::DB::CM',
 );
 
 $loader->make_modules(module_dir => 'lib',

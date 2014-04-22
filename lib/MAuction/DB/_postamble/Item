@@ -1,6 +1,4 @@
 
-
-
 sub url_name {
     my $self = shift;
     my $name = $self->name;

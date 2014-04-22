@@ -1,3 +1,4 @@
 */Manager.pm
 *.pm
 !Object.pm
+!CM.pm

@@ -79,7 +79,13 @@ $t->get_ok('/rest/v1/items/'.$id)
   ->json_is('/id', $id)
   ->json_is('/name', 'mahogany cabinet')
   ->json_has('/current_winner')
-  ->json_has('/current_price');
+  ->json_has('/current_price')
+
+  ->json_has('/current_winner_user')
+  ->json_has('/user')
+
+  ->json_hasnt('/current_winner_user/username')  # no current winner
+  ->json_has('/user/username');
 
 $t->get_ok('/rest/v1/items/1234567890')
   ->status_is(404)
@@ -193,5 +199,9 @@ like($t->tx->res->json->{error}, qr/you cannot bid lower than your previous bids
 $t->get_ok("/rest/v1/items/$put_id/bids")
   ->status_is(200);
 is(scalar @{ $t->tx->res->json }, 2, 'right number of bids on item');
+
+$t->get_ok("/rest/v1/items/$put_id")
+  ->json_has('/current_winner_user/username')  # has a winner now
+  ->json_has('/user/username');
 
 done_testing();
