@@ -1,5 +1,6 @@
 var item_template;
 var item_detail_template;
+var item_bid_template;
 
 function render_item_collection(div, items) {
     var html;
@@ -11,7 +12,6 @@ function render_item_html(item) {
     if (! item_template) {
         $.ajax('/partial/item.html', { async: false })
             .success(function(template) {
-                console.log('suucccess', template);
                 item_template = template;
             });
     }
@@ -33,6 +33,28 @@ function render_item_html(item) {
     }
 
     return new_item;
+}
+
+function render_item_bids_html(bids) {
+    if (! item_bid_template) {
+        $.ajax('/partial/item_bids.html', { async: false })
+            .success(function(template) {
+                console.log('suucccess', template);
+                item_bid_template = template;
+            });
+    }
+
+    var new_bid;
+    var html;
+    $.each(bids, function(idx, val) {
+        console.log(val);
+        new_bid = item_bid_template
+            .replace('TS', val.ts)
+            .replace('USER', val.user.username)
+            .replace('AMOUNT', val.amount);
+        html += new_bid;
+    });
+    return html;
 }
 
 function render_item_detail_html(item) {

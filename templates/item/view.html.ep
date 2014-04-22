@@ -8,11 +8,22 @@
 </div>
 
 <script>
+// load main item detail
+
 $.ajax('/rest/v1/items/<%= $item->id %>')
  .success(function(item) {
     $('#item').html(render_item_detail_html(item));
     $('#remain').html(item.remaining_string);
  });
+
+// load bids
+
+$.ajax('/rest/v1/items/<%= $item->id %>/bids')
+ .success(function(bids) {
+    $('#bids').html(render_item_bids_html(bids));
+ });
+
+
 </script>
 
 
