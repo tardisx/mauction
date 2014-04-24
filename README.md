@@ -21,9 +21,17 @@ Dependencies
 
 * perl
 * postgresql
-* Mojolicious
-* Rose::DB::Object
-* DBI
-* DBD::Pg
 * an Authen::Simple::* module for your required authentication method.
 
+Installation
+------------
+
+$ carton install
+$ createdb mauction
+$ psql mauction < etc/schema.sql
+$ carton exec script/rosedb_generate
+$ carton exec prove -Ilib -r
+
+$ carton exec morbo script/mauction
+
+Open http://localhost:3000 in your browser.
