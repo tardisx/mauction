@@ -3,3 +3,4 @@
 %uri=https://github.com/tardisx/mauction
 
 appschema 2014-04-24T04:52:25Z Justin Hawkins <justin@hawkins.id.au> # Add schema for all mauction objects.
+initial_tables [appschema] 2014-04-24T05:01:18Z Justin Hawkins <justin@hawkins.id.au> # Initial table structure

@@ -33,6 +33,7 @@ __PACKAGE__->register_db(
   type     => 'Pg',
   driver   => 'Pg',
   database => 'mauction',
+  schema   => 'mauction',
   pg_enable_utf8 => 1,
   print_error => 0,
 );

@@ -1,69 +1,68 @@
-DROP TABLE bids;
-DROP TABLE imgur_pictures;
-DROP TABLE items;
-DROP TABLE sessions;
-DROP TABLE users;
-DROP FUNCTION current_winner_for_item(this_item_id INT);
-DROP TYPE user_bid;
+-- Deploy initial_tables
+-- requires: appschema
 
-CREATE TABLE users (
+BEGIN;
+
+SET client_min_messages = 'warning';
+
+CREATE TABLE mauction.users (
   id         SERIAL NOT NULL PRIMARY KEY,
   username   TEXT   NOT NULL UNIQUE,
   last_login TIMESTAMP WITH TIME ZONE NOT NULL,
   api_token  TEXT            UNIQUE
 );
-CREATE UNIQUE INDEX lower_username ON users (lower(username));
+CREATE UNIQUE INDEX lower_username ON mauction.users (lower(username));
 
-CREATE TABLE sessions (
+CREATE TABLE mauction.sessions (
   id              SERIAL NOT NULL PRIMARY KEY,
-  uid             INT NOT NULL REFERENCES "users"(id),
+  uid             INT NOT NULL REFERENCES mauction.users(id),
   session_expiry  TIMESTAMP WITH TIME ZONE,
   session         TEXT
 );
 
 
-CREATE TABLE items (
+CREATE TABLE mauction.items (
   id              SERIAL        NOT NULL PRIMARY KEY,
-  user_id         INT           NOT NULL REFERENCES users(id),
+  user_id         INT           NOT NULL REFERENCES mauction.users(id),
   name            TEXT          NOT NULL,
   description     TEXT          NOT NULL,
   bid_increment   NUMERIC(5,2 ) NOT NULL,
   bid_min  NUMERIC(7,2)         NOT NULL,
   start_ts        TIMESTAMP WITH TIME ZONE     NOT NULL,
   end_ts          TIMESTAMP WITH TIME ZONE     NOT NULL,
-  current_winner  INT           REFERENCES users(id),
+  current_winner  INT           REFERENCES mauction.users(id),
   current_price    NUMERIC(7,2)
 );
 
-CREATE TABLE imgur_pictures (
+CREATE TABLE mauction.imgur_pictures (
   id              SERIAL     NOT NULL PRIMARY KEY,
-  item_id         INT        NOT NULL REFERENCES items(id),
+  item_id         INT        NOT NULL REFERENCES mauction.items(id),
   imgur_code      TEXT       NOT NULL
 );
 
-CREATE TABLE bids (
+CREATE TABLE mauction.bids (
   id        SERIAL          NOT NULL PRIMARY KEY,
-  user_id  INT              NOT NULL REFERENCES users(id),
-  item_id   INT             NOT NULL REFERENCES items(id),
+  user_id  INT              NOT NULL REFERENCES mauction.users(id),
+  item_id   INT             NOT NULL REFERENCES mauction.items(id),
   ts        TIMESTAMP WITH TIME ZONE       NOT NULL,
   amount    NUMERIC(7,2)    NOT NULL
 );
 
-CREATE TYPE user_bid AS (user_id INT, amount NUMERIC(7,2)); -- a user and amount
-CREATE OR REPLACE FUNCTION current_winner_for_item(this_item_id INT) RETURNS user_bid AS
+CREATE TYPE mauction.user_bid AS (user_id INT, amount NUMERIC(7,2)); -- a user and amount
+CREATE OR REPLACE FUNCTION mauction.current_winner_for_item(this_item_id INT) RETURNS mauction.user_bid AS
 $$
   DECLARE
-    item        items%ROWTYPE;
-    bid         bids%ROWTYPE;
+    item        mauction.items%ROWTYPE;
+    bid         mauction.bids%ROWTYPE;
     bid_count   INT;
 
     -- these for when we iterate
-    winner_proxy    user_bid;
-    winner_highest  user_bid;
-    this_bid        user_bid;
+    winner_proxy    mauction.user_bid;
+    winner_highest  mauction.user_bid;
+    this_bid        mauction.user_bid;
   BEGIN
     -- fetch all bids
-    SELECT count(*) FROM bids WHERE bids.item_id = this_item_id INTO bid_count;
+    SELECT count(*) FROM mauction.bids WHERE bids.item_id = this_item_id INTO bid_count;
     -- fetch the item
     SELECT * FROM items WHERE items.id = this_item_id INTO item;
 
@@ -117,13 +116,13 @@ $$
   END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION validate_bid() RETURNS TRIGGER
+CREATE OR REPLACE FUNCTION mauction.validate_bid() RETURNS TRIGGER
 AS $$
     DECLARE
-      current_winner user_bid;
-      last_bid   bids%ROWTYPE;
-      this_user_last_bid   bids%ROWTYPE;
-      item       items%ROWTYPE;
+      current_winner       mauction.user_bid;
+      last_bid             mauction.bids%ROWTYPE;
+      this_user_last_bid   mauction.bids%ROWTYPE;
+      item                 mauction.items%ROWTYPE;
     BEGIN
       IF (TG_OP = 'DELETE') THEN
         RAISE EXCEPTION 'bids cannot be deleted';
@@ -174,10 +173,10 @@ $$ LANGUAGE plpgsql;
 
 -- the above function has ensured that the new bid is valid, this one
 -- updates the fields on the item to respect the current winner and price
-CREATE OR REPLACE FUNCTION update_item_after_bid() RETURNS TRIGGER
+CREATE OR REPLACE FUNCTION mauction.update_item_after_bid() RETURNS TRIGGER
 AS $$
   DECLARE
-    current_winner user_bid;
+    current_winner mauction.user_bid;
   BEGIN
     current_winner = current_winner_for_item(NEW.item_id);
     UPDATE items SET current_winner = current_winner.user_id, current_price = current_winner.amount WHERE id = NEW.item_id;
@@ -188,10 +187,10 @@ $$ LANGUAGE plpgsql;
 
 
 
-CREATE TRIGGER validate_bid BEFORE INSERT OR UPDATE OR DELETE ON bids
-  FOR EACH ROW EXECUTE PROCEDURE validate_bid();
+CREATE TRIGGER validate_bid BEFORE INSERT OR UPDATE OR DELETE ON mauction.bids
+  FOR EACH ROW EXECUTE PROCEDURE mauction.validate_bid();
 
-CREATE TRIGGER update_item_after_bid AFTER INSERT ON bids
-  FOR EACH ROW EXECUTE PROCEDURE update_item_after_bid();
+CREATE TRIGGER update_item_after_bid AFTER INSERT ON mauction.bids
+  FOR EACH ROW EXECUTE PROCEDURE mauction.update_item_after_bid();
 
-
+COMMIT;
