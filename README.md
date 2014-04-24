@@ -21,6 +21,7 @@ Dependencies
 
 * perl
 * postgresql
+* Carton (cpan Carton)
 * an Authen::Simple::* module for your required authentication method.
 
 Installation
